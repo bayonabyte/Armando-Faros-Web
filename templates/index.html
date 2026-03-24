@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de inventario</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_index.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/logo_web.png') }}">
+</head>
+<body>
+    <header class="navbar">
+        <div class="navbar_logo">
+            <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Logo Armando Faros">Armando Faros: Soluciones automotrices
+        </div>
+    </header>
+
+   <main class="home">
+        <section class="home_bienvenida">
+            <h1>Bienvenido al Sistema de Gestión de inventario</h1>
+            <p>Administra tus productos de forma rápida y organizada.</p>
+        </section>
+
+        <section class="home_resumen">
+
+            <div class="card">
+                <h2>{{ total_productos }}</h2>
+                <p>Productos Registrados</p>
+            </div>
+
+            <div class="card">
+                <h2>{{ total_marcas }}</h2>
+                <p>Marcas Disponibles</p>
+            </div>
+        </section>
+
+        <section class="home_acciones">
+            <a href="/registrar" class="btn_principal">Registrar</a>
+            <a href="/buscar" class="btn_secundario">Buscar</a>
+            <a href="/almacen" class="btn_terciario">Almacén</a>
+            <a href="/administrar" class="btn_last">Administrar inventario</a>
+        </section>
+
+    </main>
+
+    <footer>
+
+    </footer>
+</body>
+</html>

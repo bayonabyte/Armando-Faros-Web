@@ -1,0 +1,118 @@
+/* RESET */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f9;
+}
+
+/* NAVBAR */
+
+.navbar {
+    background-color: black;
+    color: white;
+    padding: 10px 20px;
+}
+
+.navbar_logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    font-size: 20px;
+    flex-wrap: wrap;
+}
+
+.navbar_logo img {
+    height: 50px;
+    padding: 0;
+}
+
+/* CONTENIDO PRINCIPAL */
+
+.home {
+    width: 95%;
+    max-width: 1200px;
+    margin: auto;
+    padding: 30px 15px;
+}
+
+/* Bienvenida */
+.home_bienvenida h1 {
+    margin-bottom: 10px;
+    font-size: 28px;
+}
+
+.home_bienvenida p {
+    color: #555;
+}
+
+/* RESUMEN */
+
+.home_resumen {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.card {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    text-align: center;
+}
+
+.card h2 {
+    margin: 0;
+    font-size: 26px;
+}
+
+/* BOTONES */
+
+.home_acciones {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.home_acciones a {
+    padding: 25px;
+    border-radius: 10px;
+    text-decoration: none;
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+    color: white;
+    transition: transform 0.2s ease;
+}
+
+.home_acciones a:hover {
+    transform: scale(1.03);
+}
+
+/* Colores */
+.btn_principal { background-color: #2563eb; }
+.btn_secundario { background-color: #f4cf0f; color: black; }
+.btn_terciario { background-color: #613d97; }
+.btn_last { background-color: #e6191b; }
+
+/* RESPONSIVE */
+
+@media (min-width: 1024px) {
+
+    .home_bienvenida h1 {
+        font-size: 34px;
+    }
+
+    .home_acciones a {
+        font-size: 20px;
+        padding: 30px;
+    }
+
+}
