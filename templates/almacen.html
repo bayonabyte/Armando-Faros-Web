@@ -140,10 +140,12 @@
 
                     <p><strong>Estado:</strong> {{ producto['estado'] }}</p>
 
+                    <p><strong>Stock:</strong> {{ producto['stock'] }}</p>
+
                     <h2 class="precio">{{ producto['almacen'] }} - {{ producto['ubicacion'] }}</h2>
 
                     <button class="btn-retirar"
-                            onclick="retirarProducto('{{ producto['codigo'] }}', this)">
+                        onclick="retirarProducto('{{ producto['codigo'] }}', {{ producto['stock'] }})">
                         Retirar
                     </button>
                 </div>

@@ -1,12 +1,14 @@
 import math
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 import mysql.connector
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
 from PIL import Image
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'clave_segura'
+app.permanent_session_lifetime = timedelta(days=6)
 
 def get_db():
     return mysql.connector.connect(
@@ -32,6 +34,24 @@ def modelos():
     db.close()
 
     return jsonify(resultados)
+
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if "usuario" in session:
+        return redirect(url_for('index'))
+    if request.method == 'POST':
+        usuario = request.form['usuario']
+        password = request.form['password']
+        recordar = request.form.get('recordar')
+
+        if usuario == "A123" and password == "B123":
+            session.permanent = bool(recordar)
+            session['usuario'] = usuario
+            return redirect(url_for('index'))
+
+        return render_template('login.html',
+                           error="Usuario o contraseña incorrectas")
+    return render_template('login.html')
 
 @app.route("/index")
 def index():
@@ -452,27 +472,43 @@ def almacen():
 @app.route("/retirar", methods=["POST"])
 def retirar():
     codigo = request.form["codigo"]
+    cantidad = int(request.form["cantidad"])
 
     conexion = get_db()
     cursor = conexion.cursor(dictionary=True)
 
-    # 🔹 Obtener imagen antes de borrar
-    cursor.execute("SELECT imagen FROM productos WHERE codigo = %s", (codigo,))
+    # Obtener producto
+    cursor.execute("SELECT stock, imagen FROM productos WHERE codigo = %s", (codigo,))
     producto = cursor.fetchone()
 
-    if producto:
-        imagen = producto["imagen"]
+    if not producto:
+        conexion.close()
+        return jsonify({"success": False, "error": "Producto no encontrado"})
 
-        # 🔹 Borrar de la BD
+    stock_actual = producto["stock"]
+
+    if cantidad > stock_actual:
+        conexion.close()
+        return jsonify({"success": False, "error": "Stock insuficiente"})
+
+    nuevo_stock = stock_actual - cantidad
+
+    if nuevo_stock > 0:
+        cursor.execute("""
+            UPDATE productos 
+            SET stock = %s 
+            WHERE codigo = %s
+        """, (nuevo_stock, codigo))
+
+    else:
         cursor.execute("DELETE FROM productos WHERE codigo = %s", (codigo,))
-        conexion.commit()
 
-        # 🔹 Borrar imagen del servidor
-        if imagen:
-            ruta = os.path.join("static/uploads", imagen)
+        if producto["imagen"]:
+            ruta = os.path.join("static/uploads", producto["imagen"])
             if os.path.exists(ruta):
                 os.remove(ruta)
 
+    conexion.commit()
     conexion.close()
 
     return jsonify({"success": True})

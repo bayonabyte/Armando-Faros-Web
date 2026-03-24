@@ -1,37 +1,46 @@
-function confirmarRetiro(codigo) {
-    return confirm(
-        "⚠️ CONFIRMACIÓN DE RETIRO\n\n" +
-        "Código: " + codigo + "\n\n" +
-        "Esta acción eliminará el producto del inventario.\n\n" +
-        "¿Desea continuar?"
-    );
-}
+function retirarProducto(codigo, stock) {
 
-function retirarProducto(codigo, boton) {
-
-    if (!confirm("⚠️ Está retirando el producto con código " + codigo + ".\n¿Desea continuar?")) {
+    // 🔴 1. CONFIRMACIÓN PRIMERO
+    if (!confirm("⚠️ Estás retirando el producto con código " + codigo + ".\n¿Deseas continuar?")) {
         return;
     }
 
+    let cantidad = 1;
+
+    // 🟡 2. SI HAY MÁS DE 1 → PEDIR CANTIDAD
+    if (stock > 1) {
+        cantidad = prompt("¿Cuántas unidades deseas retirar?\nStock disponible: " + stock);
+
+        if (cantidad === null) return; // canceló
+
+        cantidad = parseInt(cantidad);
+
+        if (isNaN(cantidad) || cantidad <= 0) {
+            alert("Cantidad inválida");
+            return;
+        }
+
+        if (cantidad > stock) {
+            alert("No puedes retirar más de lo disponible");
+            return;
+        }
+    }
+
+    // 🟢 3. ENVIAR
     fetch("/retirar", {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded"
         },
-        body: "codigo=" + codigo
+        body: `codigo=${codigo}&cantidad=${cantidad}`
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
         if (data.success) {
-
-            mostrarNotificacion("Producto eliminado correctamente");
-
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-
+            mostrarNotificacion("Retiro realizado correctamente");
+            setTimeout(() => location.reload(), 1000);
         } else {
-            mostrarNotificacion("Error al eliminar");
+            alert(data.error);
         }
     });
 }
