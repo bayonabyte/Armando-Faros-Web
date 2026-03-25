@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de administrador</title>
+</head>
+<body>
+<h2>📊 Panel de Inventario</h2>
+
+<!-- RESUMEN -->
+<div class="dashboard">
+    <div>💰 Patrimonio: S/ {{ patrimonio }}</div>
+    <div>📈 Ventas: S/ {{ ventas }}</div>
+</div>
+
+<!-- BOTONES -->
+<div class="acciones">
+    <button>➕ Añadir Marca</button>
+    <button>✏️ Editar Productos</button>
+    <button>❌ Eliminar</button>
+    <button>📄 Reportes</button>
+</div>
+
+<!-- TABLA PRODUCTOS -->
+<h3>📦 Productos</h3>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Precio de Compra</th>
+            <th>Precio de Venta</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in productos %}
+        <tr>
+            <td>{{ p.codigo }}</td>
+            <td>{{ p.marca }}</td>
+            <td>{{ p.modelo }}</td>
+            <td>{{ p.precio_compra }}</td>
+            <td>{{ p.precio_venta }}</td>
+            <td>{{ p.stock }}</td>
+            <td>
+                <button onclick="verProducto({{ p.id }})">👁</button>
+                <button>✏️</button>
+                <button>❌</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>📜 Historial</h3>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Tipo</th>
+            <th>Código</th>
+            <th>Marca</th>
+            <th>Fecha</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for h in historial %}
+        <tr>
+            <td>{{ h.tipo_accion }}</td>
+            <td>{{ h.codigo }}</td>
+            <td>{{ h.marca }}</td>
+            <td>{{ h.fecha }}</td>
+            <td>
+                {% if h.tipo_accion != 'eliminado' %}
+                <button onclick="verHistorial({{ h.id }})">👁</button>
+                {% else %}
+                ❌
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div id="modal" style="display:none;">
+    <div>
+        <h3>Detalle del producto</h3>
+        <p id="detalle"></p>
+        <button onclick="cerrarModal()">Cerrar</button>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/administrar.js') }}"></script>
+</body>
+</html>

@@ -22,7 +22,7 @@
 
             <div class="barra">
                 <div class="progreso"
-                     style="width: {{ a.porcentaje }}%;
+                     style="width: {{ a.porcentaje  if a.porcentaje <= 100 else 100 }}%;
                      background:
                      {% if a.porcentaje > 90 %}red
                      {% elif a.porcentaje > 70 %}orange
@@ -120,8 +120,7 @@
                     {% endif %}
 
                     {% if producto['id_tipo'] in [2,3,4,5,6,8] %}
-                        <p><strong>Posición:</strong> {{ producto['posicion'] }}</p>
-                        <p><strong>Lado:</strong> {{ producto['lado'] }}</p>
+                        <p><strong>Posición:</strong> {{ producto['posicion'] }} - {{ producto['lado'] }}</p>
 
                     {% elif producto['id_tipo'] in [7,10] %}
                         <p><strong>Lado:</strong> {{ producto['lado'] }}</p>

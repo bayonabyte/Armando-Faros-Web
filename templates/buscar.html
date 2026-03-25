@@ -85,6 +85,8 @@
 
                     <h2 style="text-align: center; margin-bottom: 15px">{{ producto['marca'] }} {{ producto['modelo'] }}</h2>
 
+                    <p><strong>Código:</strong> {{ producto['codigo'] }}</p>
+
                     <p><strong>Tipo:</strong> {{ producto['tipo'] }}</p>
 
                     {% if producto['anio_inicio'] or producto['anio_fin'] %}
@@ -96,8 +98,7 @@
                     {% endif %}
 
                     {% if producto['id_tipo'] in [2,3,4,5,6,8] %}
-                        <p><strong>Posición:</strong> {{ producto['posicion'] }}</p>
-                        <p><strong>Lado:</strong> {{ producto['lado'] }}</p>
+                        <p><strong>Posición:</strong> {{ producto['posicion'] }} - {{ producto['lado'] }}</p>
 
                     {% elif producto['id_tipo'] in [7,10] %}
                         <p><strong>Lado:</strong> {{ producto['lado'] }}</p>

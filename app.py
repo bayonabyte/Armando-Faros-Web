@@ -62,7 +62,7 @@ def index():
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
-    cursor.execute("SELECT COUNT(*) AS total FROM productos")
+    cursor.execute("SELECT IFNULL(SUM(stock), 0) AS total FROM productos")
     total_productos = cursor.fetchone()["total"]
 
     cursor.execute("SELECT COUNT(DISTINCT id_marca) AS total FROM productos")
@@ -199,7 +199,7 @@ def buscar():
     # QUERY PRINCIPAL
     query = """
     SELECT p.*, m.nombre AS marca, mo.nombre AS modelo, t.nombre AS tipo, po.nombre AS posicion,
-    p.id_lado AS lado, al.id AS almacen
+    p.id_lado AS lado, al.id AS almacen, al.nombre AS almacen
     FROM productos p
     LEFT JOIN marcas m ON p.id_marca = m.id
     LEFT JOIN modelos mo ON p.id_modelo = mo.id
@@ -344,8 +344,8 @@ def almacen():
             al.id,
             al.nombre,
             al.capacidad_total,
-            COUNT(p.id) AS productos_actuales,
-            IFNULL((COUNT(p.id) * 100.0 / al.capacidad_total), 0) AS porcentaje
+            IFNULL(SUM(p.stock), 0) AS productos_actuales,
+            IFNULL((SUM(p.stock) * 100.0 / al.capacidad_total), 0) AS porcentaje
         FROM almacenes al
         LEFT JOIN productos p ON p.id_almacen = al.id
         GROUP BY al.id
@@ -516,6 +516,69 @@ def retirar():
     conexion.close()
 
     return jsonify({"success": True})
+
+@app.route("/administrar", methods=["GET"])
+def admin_inventario():
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    # 📊 Patrimonio (costo total)
+    cursor.execute("SELECT SUM(precio_compra * stock) AS patrimonio FROM productos")
+    patrimonio = cursor.fetchone()["patrimonio"] or 0
+
+    # 📊 Ventas (valor total)
+    cursor.execute("SELECT SUM(precio_venta * stock) AS ventas FROM productos")
+    ventas = cursor.fetchone()["ventas"] or 0
+
+    # 📦 Productos
+    cursor.execute("""
+        SELECT p.*, 
+               m.nombre AS marca, 
+               mo.nombre AS modelo
+        FROM productos p
+        LEFT JOIN marcas m ON p.id_marca = m.id
+        LEFT JOIN modelos mo ON p.id_modelo = mo.id
+    """)
+    productos = cursor.fetchall()
+
+    # 📜 Historial
+    cursor.execute("""
+        SELECT h.*, p.codigo, p.id_marca
+        FROM historial h
+        LEFT JOIN productos p ON h.producto_id = p.id
+        ORDER BY h.fecha DESC
+    """)
+    historial = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "administrar.html",
+        patrimonio=patrimonio,
+        ventas=ventas,
+        productos=productos,
+        historial=historial
+    )
+
+@app.route("/producto/<int:id>")
+def get_producto(id):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT p.*, 
+               m.nombre AS marca, 
+               mo.nombre AS modelo
+        FROM productos p
+        LEFT JOIN marcas m ON p.id_marca = m.id
+        LEFT JOIN modelos mo ON p.id_modelo = mo.id
+        WHERE p.id = %s
+    """, (id,))
+
+    producto = cursor.fetchone()
+    conn.close()
+
+    return producto
 
 if __name__ == '__main__':
     app.run(debug=True)
