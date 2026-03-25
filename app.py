@@ -5,6 +5,9 @@ from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
 from PIL import Image
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'clave_segura'
