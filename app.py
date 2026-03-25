@@ -12,10 +12,11 @@ app.permanent_session_lifetime = timedelta(days=6)
 
 def get_db():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="inventario"
+        host=os.getenv('DB_HOST'),
+        user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD'),
+        database=os.getenv('DB_DATABASE'),
+        port=int(os.getenv('DB_PORT')),
     )
 
 @app.route('/modelos')
