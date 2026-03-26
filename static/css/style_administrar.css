@@ -1,0 +1,195 @@
+/* RESET */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:#f4f6f9;
+    padding:20px;
+}
+
+/* VOLVER */
+.back{
+    margin-bottom:20px;
+}
+
+.back a{
+    text-decoration:none;
+    font-weight:bold;
+    color:#2d6cdf;
+}
+
+/* TITULOS */
+h1{
+    text-align:center;
+    margin:25px;
+}
+
+.historial_container{
+    width:100%;
+    max-width:1700px;
+    margin:auto;
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.08);
+}
+
+/* DASHBOARD */
+.dashboard{
+    display:flex;
+    gap:20px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-bottom:30px;
+}
+
+.dashboard div{
+    background:white;
+    padding:20px 30px;
+    border-radius:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+    font-weight:bold;
+    font-size:18px;
+}
+
+/* BOTONES ACCIONES */
+.acciones{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-bottom:30px;
+}
+
+.acciones button{
+    padding:12px 18px;
+    border:none;
+    border-radius:8px;
+    background:#2563eb;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.acciones button:hover{
+    background:#1f4fb8;
+    transform:scale(1.05);
+}
+
+/* TABLAS */
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+thead{
+    background:#2563eb;
+    color:white;
+}
+
+th, td{
+    padding:12px;
+    text-align:center;
+    border-bottom:1px solid #eee;
+}
+
+tbody tr:hover{
+    background:#f9fafb;
+}
+
+/* BOTONES DENTRO DE TABLA */
+td button{
+    padding:6px 10px;
+    margin:2px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:14px;
+}
+
+/* colores acciones */
+td button:nth-child(1){
+    background:#3498db; /* ver */
+    color:white;
+}
+
+td button:nth-child(2){
+    background:#f4cf0f; /* editar */
+    color:black;
+}
+
+td button:nth-child(3){
+    background:#e74c3c; /* eliminar */
+    color:white;
+}
+
+.center-btn{
+    display: flex;
+    justify-content: center;
+}
+
+.btn-ver-mas{
+    display:inline-block;
+    margin-top:15px;
+    padding:10px 15px;
+    background:#2d6cdf;
+    color:white;
+    border-radius:8px;
+    text-decoration:none;
+}
+/* MENSAJE VACIO */
+.mensaje-vacio{
+    text-align:center;
+    margin-top:20px;
+    color:#666;
+}
+
+
+/* BOTON VER MÁS */
+a button{
+    margin-top:15px;
+    padding:10px 15px;
+    border:none;
+    border-radius:8px;
+    background:#2d6cdf;
+    color:white;
+    cursor:pointer;
+}
+
+a button:hover{
+    background:#1f4fb8;
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+
+    .dashboard{
+        flex-direction:column;
+        align-items:center;
+    }
+
+    .acciones{
+        flex-direction:column;
+    }
+
+    .acciones button{
+        width:100%;
+    }
+
+    table{
+        font-size:12px;
+    }
+
+    th, td{
+        padding:8px;
+    }
+}

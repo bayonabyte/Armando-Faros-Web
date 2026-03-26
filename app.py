@@ -519,8 +519,128 @@ def retirar():
 
 @app.route("/administrar", methods=["GET"])
 def admin_inventario():
-    conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+    conexion = get_db()
+    cursor = conexion.cursor(dictionary=True)
+
+    anio_actual = datetime.now().year
+
+    productos_por_pagina = 10
+    pagina = request.args.get("page", 1, type=int)
+
+    busqueda = request.args.get("busqueda", "").upper().strip()
+    marca = request.args.get("marca", "")
+    anio = request.args.get("anio", "")
+    tipo = request.args.get("tipo", "")
+    almacen = request.args.get("almacen", "")
+
+    offset = (pagina - 1) * productos_por_pagina
+
+    # 🔹 Obtener marcas (FALTABA ESTO)
+    cursor.execute("SELECT id, nombre FROM marcas")
+    marcas = cursor.fetchall()
+
+    cursor.execute("SELECT id, nombre FROM tipos")
+    tipos = cursor.fetchall()
+
+    cursor.execute("SELECT id, nombre FROM almacenes")
+    almacenes = cursor.fetchall()
+
+    # QUERY PRINCIPAL
+    query = """
+       SELECT p.*, m.nombre AS marca, mo.nombre AS modelo, t.nombre AS tipo, po.nombre AS posicion,
+       p.id_lado AS lado, al.id AS almacen, al.nombre AS almacen
+       FROM productos p
+       LEFT JOIN marcas m ON p.id_marca = m.id
+       LEFT JOIN modelos mo ON p.id_modelo = mo.id
+       LEFT JOIN tipos t ON p.id_tipo = t.id
+       LEFT JOIN posiciones po ON p.id_posicion = po.id
+       LEFT JOIN almacenes al on p.id_almacen = al.id
+       WHERE 1=1
+       """
+    params = []
+
+    if busqueda:
+        query += """
+           AND (m.nombre LIKE %s OR mo.nombre LIKE %s OR p.codigo LIKE %s)
+           """
+        params.extend(["%" + busqueda + "%"] * 3)
+
+    if marca:
+        query += " AND p.id_marca = %s"
+        params.append(marca)
+
+    if anio:
+        query += """
+           AND NOT (p.anio_inicio IS NULL AND p.anio_fin IS NULL)
+           AND (
+               (p.anio_inicio IS NULL OR p.anio_inicio <= %s)
+               AND
+               (p.anio_fin IS NULL OR p.anio_fin >= %s)
+           )
+           """
+        params.extend([anio, anio])
+
+    if tipo:
+        query += " AND p.id_tipo = %s"
+        params.append(tipo)
+
+    if almacen:
+        query += " AND p.id_almacen = %s"
+        params.append(almacen)
+
+    # COUNT
+    count_query = """
+           SELECT COUNT(*) AS total
+           FROM productos p
+           LEFT JOIN marcas m ON p.id_marca = m.id
+           LEFT JOIN modelos mo ON p.id_modelo = mo.id
+           LEFT JOIN tipos t ON p.id_tipo = t.id
+           LEFT JOIN posiciones po ON p.id_posicion = po.id
+           LEFT JOIN almacenes al ON p.id_almacen = al.id
+           LEFT JOIN estados e ON p.id_estado = e.id
+           WHERE 1=1
+       """
+    count_params = []
+
+    if busqueda:
+        count_query += " AND (m.nombre LIKE %s OR mo.nombre LIKE %s OR p.codigo LIKE %s)"
+        count_params.extend(["%" + busqueda + "%"] * 3)
+
+    if marca:
+        count_query += " AND p.id_marca = %s"
+        count_params.append(marca)
+
+    if anio:
+        count_query += """
+           AND NOT (p.anio_inicio IS NULL AND p.anio_fin IS NULL)
+           AND (
+               (p.anio_inicio IS NULL OR p.anio_inicio <= %s)
+               AND
+               (p.anio_fin IS NULL OR p.anio_fin >= %s)
+           )
+           """
+        count_params.extend([anio, anio])
+
+    if tipo:
+        count_query += " AND p.id_tipo = %s"
+        count_params.append(tipo)
+
+    if almacen:
+        count_query += " AND p.id_almacen = %s"
+        count_params.append(almacen)
+
+    cursor.execute(count_query, count_params)
+    total_productos = cursor.fetchone()["total"]
+
+    # PAGINACIÓN
+    query += " LIMIT %s OFFSET %s"
+    params.extend([productos_por_pagina, offset])
+
+    cursor.execute(query, params)
+    productos = cursor.fetchall()
+
+    total_paginas = max(1, math.ceil(total_productos / productos_por_pagina))
+
 
     # 📊 Patrimonio (costo total)
     cursor.execute("SELECT SUM(precio_compra * stock) AS patrimonio FROM productos")
@@ -530,18 +650,43 @@ def admin_inventario():
     cursor.execute("SELECT SUM(precio_venta * stock) AS ventas FROM productos")
     ventas = cursor.fetchone()["ventas"] or 0
 
-    # 📦 Productos
-    cursor.execute("""
-        SELECT p.*, 
-               m.nombre AS marca, 
-               mo.nombre AS modelo
-        FROM productos p
-        LEFT JOIN marcas m ON p.id_marca = m.id
-        LEFT JOIN modelos mo ON p.id_modelo = mo.id
-    """)
-    productos = cursor.fetchall()
 
     # 📜 Historial
+    cursor.execute("""
+        SELECT h.*, p.codigo, p.id_marca
+        FROM historial h
+        LEFT JOIN productos p ON h.producto_id = p.id
+        ORDER BY h.fecha DESC
+        LIMIT 5
+    """)
+    historial = cursor.fetchall()
+
+    conexion.close()
+
+    return render_template(
+        "administrar.html",
+        patrimonio=patrimonio,
+        ventas=ventas,
+        productos=productos,
+        historial=historial,
+        marcas=marcas,
+        tipos=tipos,
+        tipo=tipo,
+        anio_actual=anio_actual,
+        pagina=pagina,
+        total_paginas=total_paginas,
+        busqueda=busqueda,
+        marca=marca,
+        anio=anio,
+        almacen=almacen,
+        almacenes=almacenes,
+    )
+
+@app.route("/historial")
+def ver_historial():
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
     cursor.execute("""
         SELECT h.*, p.codigo, p.id_marca
         FROM historial h
@@ -552,13 +697,7 @@ def admin_inventario():
 
     conn.close()
 
-    return render_template(
-        "administrar.html",
-        patrimonio=patrimonio,
-        ventas=ventas,
-        productos=productos,
-        historial=historial
-    )
+    return render_template("admin/historial.html", historial=historial)
 
 @app.route("/producto/<int:id>")
 def get_producto(id):
@@ -579,6 +718,84 @@ def get_producto(id):
     conn.close()
 
     return producto
+
+@app.route("/admin/marca-modelo")
+def vista_marca_modelo():
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT id, nombre FROM marcas")
+    marcas = cursor.fetchall()
+
+    conn.close()
+
+    return render_template("admin/marca_modelo.html", marcas=marcas)
+
+@app.route("/admin/marca-modelo", methods=["POST"])
+def guardar_marca_modelo():
+    conn = get_db()
+    cursor = conn.cursor()
+
+    marca_id = request.form.get("marca_id")
+    nueva_marca = (request.form.get("nueva_marca") or "").upper().strip()
+    codigo_marca = (request.form.get("codigo_marca") or "").upper().strip()
+
+    modelo = request.form.get("modelo").upper().strip()
+    codigo_modelo = request.form.get("codigo_modelo").upper().strip()
+    tipo = request.form.get("tipo")
+
+    usuario = "Admin"
+
+    # 🔴 VALIDACIÓN
+    if tipo == "marca_modelo":
+        if not nueva_marca or not codigo_marca:
+            conn.close()
+            return "Debes ingresar una nueva marca o seleccionar una existente"
+
+        # evitar duplicados
+        cursor.execute("SELECT id FROM marcas WHERE LOWER(nombre)=LOWER(%s)", (nueva_marca,))
+        existe = cursor.fetchone()
+
+        if existe:
+            marca_id = existe[0]
+        else:
+            cursor.execute("""
+                INSERT INTO marcas (nombre, codigo)
+                VALUES (%s, %s)
+            """, (nueva_marca, codigo_marca))
+            marca_id = cursor.lastrowid
+
+            cursor.execute("""
+                INSERT INTO historial (producto_id, tipo_accion, usuario, detalles)
+                VALUES (NULL, 'registro', %s, %s)
+            """, (usuario, f"Marca creada: {nueva_marca}"))
+
+    # 🔴 validar modelo duplicado
+    cursor.execute("""
+        SELECT id FROM modelos 
+        WHERE nombre=%s AND id_marca=%s
+    """, (modelo, marca_id))
+
+    if cursor.fetchone():
+        conn.close()
+        return "Este modelo ya existe para esa marca"
+
+    # crear modelo
+    cursor.execute("""
+        INSERT INTO modelos (id_marca, nombre, codigo)
+        VALUES (%s, %s, %s)
+    """, (marca_id, modelo, codigo_modelo))
+
+    cursor.execute("""
+        INSERT INTO historial (producto_id, tipo_accion, usuario, detalles)
+        VALUES (NULL, 'registro', %s, %s)
+    """, (usuario, f"Modelo creado: {modelo}"))
+
+    conn.commit()
+    conn.close()
+
+    print("tipo:", tipo)
+    return redirect(url_for("admin_inventario"))
 
 if __name__ == '__main__':
     app.run(debug=True)

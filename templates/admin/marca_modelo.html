@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Añadir marca o modelo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_marca_modelo.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/logo_web.png') }}">
+</head>
+<body>
+    <div class="back">
+        <a href="{{ url_for('admin_inventario') }}">← Volver</a>
+    </div>
+    <h2>➕ Añadir Marca / Modelo</h2>
+
+    <label>¿Qué deseas hacer?</label>
+    <select id="tipo" onchange="cambiarFormulario()">
+        <option value="modelo">Añadir modelo a marca existente</option>
+        <option value="marca_modelo">Añadir nueva marca y modelo</option>
+    </select>
+
+    <br><br>
+
+    <form method="POST" action="/admin/marca-modelo">
+        <input type="hidden" name="tipo" id="tipo_hidden">
+        <div id="seccion_modelo">
+            <label>Seleccionar marca:</label>
+            <select name="marca_id">
+                <option value="">Selecciona marca</option>
+                {% for m in marcas %}
+                    <option value="{{ m.id }}">{{ m.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="seccion_marca" style="display:none;">
+            <label>Nueva marca:</label>
+            <input type="text" name="nueva_marca" placeholder="Ej: TOYOTA">
+
+            <label>Código marca:</label>
+            <input type="text" name="codigo_marca" placeholder="Ej: TOY">
+        </div>
+
+        <br>
+
+        <label>Modelo:</label>
+        <input type="text" name="modelo" placeholder="Ej: COROLLA" required>
+
+        <label>Código modelo:</label>
+        <input type="text" name="codigo_modelo" placeholder="Ej: COR" required>
+
+        <br><br>
+
+        <button type="submit">Guardar</button>
+    </form>
+
+<script src="{{ url_for('static', filename='js/marca_modelo.js') }}"></script>
+</body>
+</html>

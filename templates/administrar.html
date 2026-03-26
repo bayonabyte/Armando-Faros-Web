@@ -1,98 +1,219 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de administrador</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_administrar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_buscar.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/logo_web.png') }}">
 </head>
 <body>
-<h2>📊 Panel de Inventario</h2>
-
-<!-- RESUMEN -->
-<div class="dashboard">
-    <div>💰 Patrimonio: S/ {{ patrimonio }}</div>
-    <div>📈 Ventas: S/ {{ ventas }}</div>
-</div>
-
-<!-- BOTONES -->
-<div class="acciones">
-    <button>➕ Añadir Marca</button>
-    <button>✏️ Editar Productos</button>
-    <button>❌ Eliminar</button>
-    <button>📄 Reportes</button>
-</div>
-
-<!-- TABLA PRODUCTOS -->
-<h3>📦 Productos</h3>
-<table border="1">
-    <thead>
-        <tr>
-            <th>Código</th>
-            <th>Marca</th>
-            <th>Modelo</th>
-            <th>Precio de Compra</th>
-            <th>Precio de Venta</th>
-            <th>Stock</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for p in productos %}
-        <tr>
-            <td>{{ p.codigo }}</td>
-            <td>{{ p.marca }}</td>
-            <td>{{ p.modelo }}</td>
-            <td>{{ p.precio_compra }}</td>
-            <td>{{ p.precio_venta }}</td>
-            <td>{{ p.stock }}</td>
-            <td>
-                <button onclick="verProducto({{ p.id }})">👁</button>
-                <button>✏️</button>
-                <button>❌</button>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<h3>📜 Historial</h3>
-
-<table border="1">
-    <thead>
-        <tr>
-            <th>Tipo</th>
-            <th>Código</th>
-            <th>Marca</th>
-            <th>Fecha</th>
-            <th>Acción</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for h in historial %}
-        <tr>
-            <td>{{ h.tipo_accion }}</td>
-            <td>{{ h.codigo }}</td>
-            <td>{{ h.marca }}</td>
-            <td>{{ h.fecha }}</td>
-            <td>
-                {% if h.tipo_accion != 'eliminado' %}
-                <button onclick="verHistorial({{ h.id }})">👁</button>
-                {% else %}
-                ❌
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<div id="modal" style="display:none;">
-    <div>
-        <h3>Detalle del producto</h3>
-        <p id="detalle"></p>
-        <button onclick="cerrarModal()">Cerrar</button>
+    <div class="back">
+        <a href="{{ url_for('index') }}">← Volver al Inicio</a>
     </div>
-</div>
+    <h1>Panel de Inventario</h1>
 
-<script src="{{ url_for('static', filename='js/administrar.js') }}"></script>
+    <!-- RESUMEN -->
+    <div class="dashboard">
+        <div>💰 Valor de inversión: S/ {{ patrimonio }}</div>
+        <div>📈 Valor de recuperación: S/ {{ ventas }}</div>
+    </div>
+
+    <!-- BOTONES -->
+    <div class="acciones">
+        <button onclick="window.location.href='/admin/marca-modelo'">
+            ➕ Añadir Marca / Modelo
+        </button>
+        <button>✏️ Editar Productos</button>
+        <button>❌ Eliminar</button>
+        <button>📄 Reportes</button>
+    </div>
+
+    <!-- TABLA PRODUCTOS -->
+    <div class="buscar_container">
+
+        <h1>Buscar un producto</h1>
+
+        <form method="get" class="form_buscar">
+
+            <input type="text"
+                   name="busqueda"
+                   placeholder="Buscar producto..."
+                   value="{{ busqueda }}">
+
+            <button type="submit">Buscar</button>
+
+            <div class="filtros">
+
+                <select name="marca">
+                    <option value="">Seleccione una marca</option>
+                    {% for m in marcas %}
+                        <option value="{{ m.id }}" {% if marca|string == m.id|string %}selected{% endif %}>
+                            {{ m.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <select name="anio">
+                    <option value="">Seleccione un año</option>
+                    {% for a in range(2000, anio_actual + 1) %}
+                        <option value="{{ a }}" {% if anio|string == a|string %}selected{% endif %}>
+                            {{ a }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <select name="tipo" id="tipo">
+                    <option value="">Seleccione un tipo de faro</option>
+                    {% for t in tipos %}
+                        <option value="{{ t.id }}" {% if tipo == t.id|string %}selected{% endif %}>
+                            {{ t.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <select name="almacen" id="almacen">
+                    <option value="">Seleccione un almacén</option>
+                    {% for al in almacenes %}
+                        <option value="{{ al.id }}" {% if almacen == al.id|string %}selected{% endif %}>
+                            {{ al.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+
+                <button type="submit">Aplicar filtro</button>
+
+                <a href="{{ url_for('admin_inventario') }}" class="btn-limpiar">Limpiar</a>
+
+            </div>
+
+        </form>
+
+        {% if productos %}
+
+        <div class="buscar">
+
+            {% for producto in productos %}
+            <div class="card">
+
+                <img src="{{ url_for('static', filename='uploads/' + (producto['imagen'] or 'default.png')) }}">
+
+                <div class="info">
+
+                    <h2 style="text-align: center; margin-bottom: 15px">{{ producto['marca'] }} {{ producto['modelo'] }}</h2>
+
+                    <p><strong>Código:</strong> {{ producto['codigo'] }}</p>
+
+                    <p><strong>Tipo:</strong> {{ producto['tipo'] }}</p>
+
+                    {% if producto['anio_inicio'] or producto['anio_fin'] %}
+                        <p><strong>Años:</strong>
+                            {{ producto['anio_inicio'] or '' }}
+                            {% if producto['anio_inicio'] or producto['anio_fin'] %}-{% endif %}
+                            {{ producto['anio_fin'] or '' }}
+                        </p>
+                    {% endif %}
+
+                    {% if producto['id_tipo'] in [2,3,4,5,6,8] %}
+                        <p><strong>Posición:</strong> {{ producto['posicion'] }} - {{ producto['lado'] }}</p>
+
+                    {% elif producto['id_tipo'] in [7,10] %}
+                        <p><strong>Lado:</strong> {{ producto['lado'] }}</p>
+
+                    {% elif producto['id_tipo'] == 9 %}
+                        <p><strong>Posición:</strong> {{ producto['posicion'] }}</p>
+
+                    {% elif producto['id_tipo'] == 1 %}
+
+                    {% endif %}
+
+                    <p><strong>Stock:</strong> {{ producto['stock'] }}</p>
+
+                    <p><strong>Almacen:</strong> {{ producto['almacen'] }} - {{ producto['ubicacion'] }}</p>
+
+                    <h2 class="precio">S/.{{ producto['precio_venta'] }}</h2>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+            {% if busqueda %}
+                <p class="mensaje-vacio">
+                    No se encontraron resultados para "<strong>{{ busqueda }}</strong>".
+                </p>
+            {% else %}
+                <p class="mensaje-vacio">
+                    No hay productos registrados en el inventario.
+                </p>
+            {% endif %}
+
+        {% endif %}
+
+        <p id="mensajeVacio" class="mensaje-vacio" style="display: none;">
+            No hay ninguna coincidencia con los filtros seleccionados.
+        </p>
+
+        <div class="paginacion">
+
+            {% if pagina > 1 %}
+                <a href="{{ url_for('admin_inventario', page=pagina-1, busqueda=busqueda, marca=marca, anio=anio) }}">
+                    « Anterior
+                </a>
+            {% endif %}
+
+            <span>Página {{ pagina }} de {{ total_paginas }}</span>
+
+            {% if pagina < total_paginas %}
+                <a href="{{ url_for('admin_inventario', page=pagina+1, busqueda=busqueda, marca=marca, anio=anio) }}">
+                    Siguiente »
+                </a>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+    <h1>Historial de cambios</h1>
+    <div class="historial_container">
+        {% if historial %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in historial %}
+                <tr>
+                    <td>{{ h.tipo_accion }}</td>
+                    <td>{{ h.detalles }}</td>
+                    <td>{{ h.fecha }}</td>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="center-btn">
+            <a href="/historial" class="btn-ver-mas">Ver más</a>
+        </div>
+        {% else %}
+        {% if historial %}
+            <p class="mensaje-vacio">
+                No hay cambios registrados "<strong>{{ historial }}</strong>".
+            </p>
+        {% else %}
+            <p class="mensaje-vacio">
+                No hay cambios registrados.
+            </p>
+        {% endif %}
+        {% endif %}
+    </div>
 </body>
 </html>

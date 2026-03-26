@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial completo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_administrar.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/logo_web.png') }}">
+</head>
+<body>
+<h2>Historial completo</h2>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Tipo</th>
+            <th>Descripción</th>
+            <th>Fecha</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for h in historial %}
+        <tr>
+            <td>{{ h.tipo_accion }}</td>
+            <td>{{ h.detalles }}</td>
+            <td>{{ h.fecha }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="/administrar">
+    <button>⬅ Volver</button>
+</a>
+</body>
+</html>
