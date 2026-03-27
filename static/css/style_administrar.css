@@ -38,6 +38,37 @@ h1{
     box-shadow:0 5px 15px rgba(0,0,0,0.08);
 }
 
+.acciones-card {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-editar,
+.btn-eliminar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 15px;
+    line-height: 1;
+    border-radius: 6px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-editar {
+    background: #3498db;
+    color: white;
+}
+
+.btn-eliminar {
+    background: #e74c3c;
+    color: white;
+}
+
 /* DASHBOARD */
 .dashboard{
     display:flex;

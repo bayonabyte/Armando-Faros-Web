@@ -186,7 +186,6 @@ def buscar():
 
     offset = (pagina - 1) * productos_por_pagina
 
-    # 🔹 Obtener marcas (FALTABA ESTO)
     cursor.execute("SELECT id, nombre FROM marcas")
     marcas = cursor.fetchall()
 
@@ -196,7 +195,6 @@ def buscar():
     cursor.execute("SELECT id, nombre FROM almacenes")
     almacenes = cursor.fetchall()
 
-    # QUERY PRINCIPAL
     query = """
     SELECT p.*, m.nombre AS marca, mo.nombre AS modelo, t.nombre AS tipo, po.nombre AS posicion,
     p.id_lado AS lado, al.id AS almacen, al.nombre AS almacen
@@ -328,7 +326,6 @@ def almacen():
 
     offset = (pagina - 1) * productos_por_pagina
 
-    # 🔹 Obtener marcas (FALTABA ESTO)
     cursor.execute("SELECT id, nombre FROM marcas")
     marcas = cursor.fetchall()
 
@@ -338,7 +335,6 @@ def almacen():
     cursor.execute("SELECT id, nombre FROM almacenes")
     almacenes = cursor.fetchall()
 
-    # 🔹 RESUMEN DE ALMACENES (CAPACIDAD)
     cursor.execute("""
         SELECT 
             al.id,
@@ -353,7 +349,6 @@ def almacen():
 
     resumen_almacenes = cursor.fetchall()
 
-    # QUERY PRINCIPAL
     query = """
         SELECT p.*, 
            m.nombre AS marca, 
@@ -535,7 +530,6 @@ def admin_inventario():
 
     offset = (pagina - 1) * productos_por_pagina
 
-    # 🔹 Obtener marcas (FALTABA ESTO)
     cursor.execute("SELECT id, nombre FROM marcas")
     marcas = cursor.fetchall()
 
@@ -545,7 +539,6 @@ def admin_inventario():
     cursor.execute("SELECT id, nombre FROM almacenes")
     almacenes = cursor.fetchall()
 
-    # QUERY PRINCIPAL
     query = """
        SELECT p.*, m.nombre AS marca, mo.nombre AS modelo, t.nombre AS tipo, po.nombre AS posicion,
        p.id_lado AS lado, al.id AS almacen, al.nombre AS almacen
@@ -588,7 +581,6 @@ def admin_inventario():
         query += " AND p.id_almacen = %s"
         params.append(almacen)
 
-    # COUNT
     count_query = """
            SELECT COUNT(*) AS total
            FROM productos p
@@ -649,7 +641,6 @@ def admin_inventario():
     # 📊 Ventas (valor total)
     cursor.execute("SELECT SUM(precio_venta * stock) AS ventas FROM productos")
     ventas = cursor.fetchone()["ventas"] or 0
-
 
     # 📜 Historial
     cursor.execute("""
@@ -746,13 +737,11 @@ def guardar_marca_modelo():
 
     usuario = "Admin"
 
-    # 🔴 VALIDACIÓN
     if tipo == "marca_modelo":
         if not nueva_marca or not codigo_marca:
             conn.close()
             return "Debes ingresar una nueva marca o seleccionar una existente"
 
-        # evitar duplicados
         cursor.execute("SELECT id FROM marcas WHERE LOWER(nombre)=LOWER(%s)", (nueva_marca,))
         existe = cursor.fetchone()
 
@@ -765,12 +754,6 @@ def guardar_marca_modelo():
             """, (nueva_marca, codigo_marca))
             marca_id = cursor.lastrowid
 
-            cursor.execute("""
-                INSERT INTO historial (producto_id, tipo_accion, usuario, detalles)
-                VALUES (NULL, 'registro', %s, %s)
-            """, (usuario, f"Marca creada: {nueva_marca}"))
-
-    # 🔴 validar modelo duplicado
     cursor.execute("""
         SELECT id FROM modelos 
         WHERE nombre=%s AND id_marca=%s
@@ -780,22 +763,230 @@ def guardar_marca_modelo():
         conn.close()
         return "Este modelo ya existe para esa marca"
 
-    # crear modelo
     cursor.execute("""
         INSERT INTO modelos (id_marca, nombre, codigo)
         VALUES (%s, %s, %s)
     """, (marca_id, modelo, codigo_modelo))
 
+    if nueva_marca:
+        descripcion = f"Marca {nueva_marca} con modelo {modelo} añadidos a la base de datos"
+    else:
+        cursor.execute("SELECT nombre FROM marcas WHERE id=%s", (marca_id,))
+        nombre_marca = cursor.fetchone()[0]
+
+        descripcion = f"Modelo {modelo} añadido a la marca {nombre_marca}"
+
     cursor.execute("""
         INSERT INTO historial (producto_id, tipo_accion, usuario, detalles)
-        VALUES (NULL, 'registro', %s, %s)
-    """, (usuario, f"Modelo creado: {modelo}"))
+        VALUES (NULL, 'Añadido', %s, %s)
+    """, (usuario, descripcion))
 
     conn.commit()
     conn.close()
-
-    print("tipo:", tipo)
     return redirect(url_for("admin_inventario"))
+
+@app.route("/editar_producto/<int:id>", methods=["GET", "POST"])
+def editar_producto(id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("SELECT id, nombre FROM marcas")
+    marcas = cursor.fetchall()
+
+    cursor.execute("SELECT id, nombre FROM tipos")
+    tipos = cursor.fetchall()
+
+    cursor.execute("SELECT id, nombre FROM posiciones")
+    posiciones = cursor.fetchall()
+
+    cursor.execute("SELECT id, nombre FROM estados")
+    estados = cursor.fetchall()
+
+    cursor.execute("SELECT id, nombre FROM almacenes")
+    almacenes = cursor.fetchall()
+
+    cursor.execute("SELECT * FROM productos WHERE id=%s", (id,))
+    producto = cursor.fetchone()
+
+    if not producto:
+        return redirect(url_for("admin_inventario"))
+
+    cursor.execute(
+        "SELECT id, nombre FROM modelos WHERE id_marca=%s",
+        (producto["id_marca"],)
+    )
+    modelos = cursor.fetchall()
+
+    if request.method == "POST":
+
+        codigo = request.form["codigo"]
+        marca = request.form["marca"]
+        modelo = request.form["modelo"]
+        anio_inicio = request.form.get("anio_inicio") or None
+        anio_fin = request.form.get("anio_fin") or None
+        tipo = request.form["tipo"]
+        posicion = request.form.get("posicion") or None
+        lado = request.form.get("lado") or None
+        precio_compra = request.form["precio_compra"]
+        precio_venta = request.form["precio_venta"]
+        stock = request.form["stock"]
+        ubicacion = request.form["ubicacion"].upper().strip()
+        estado = request.form["estado"]
+        almacen = request.form["almacen"]
+        imagen = request.files.get("imagen")
+
+        anterior = dict(producto)
+
+        cursor.execute("""
+            UPDATE productos SET
+            codigo=%s,
+            id_marca=%s,
+            id_modelo=%s,
+            anio_inicio=%s,
+            anio_fin=%s,
+            id_tipo=%s,
+            id_posicion=%s,
+            id_lado=%s,
+            precio_compra=%s,
+            precio_venta=%s,
+            stock=%s,
+            ubicacion=%s,
+            id_estado=%s,
+            id_almacen=%s
+            WHERE id=%s
+        """, (
+            codigo, marca, modelo,
+            anio_inicio, anio_fin, tipo,
+            posicion, lado,
+            precio_compra, precio_venta,
+            stock, ubicacion,
+            estado, almacen,
+            id
+        ))
+
+        cambios = []
+
+        if str(anterior["codigo"]) != str(codigo):
+            cambios.append(f"Código {anterior['codigo']} → {codigo}")
+
+        if str(anterior["precio_venta"]) != str(precio_venta):
+            cambios.append(f"Precio venta {anterior['precio_venta']} → {precio_venta}")
+
+        if str(anterior["stock"]) != str(stock):
+            cambios.append(f"Stock {anterior['stock']} → {stock}")
+
+        if str(anterior["id_modelo"]) != str(modelo):
+            cambios.append("Modelo cambiado")
+
+        if str(anterior["id_tipo"]) != str(tipo):
+            cambios.append("Tipo cambiado")
+
+        if str(anterior["id_posicion"]) != str(posicion):
+            cambios.append("Posición cambiada")
+
+        if str(anterior["id_lado"]) != str(lado):
+            cambios.append("Lado cambiado")
+
+        if str(anterior["id_almacen"]) != str(almacen):
+            cambios.append("Almacén cambiado")
+
+        if imagen and imagen.filename != "":
+            extension = os.path.splitext(imagen.filename)[1]
+            nombre_imagen = secure_filename(codigo + extension)
+
+            ruta = os.path.join("static", "uploads", nombre_imagen)
+
+            imagen_anterior = producto.get("imagen")
+
+            if imagen_anterior:
+                ruta_anterior = os.path.join("static", "uploads", imagen_anterior)
+
+                if os.path.exists(ruta_anterior):
+                    os.remove(ruta_anterior)
+
+            img = Image.open(imagen)
+            img = img.convert("RGB")
+            img.thumbnail((800, 800))
+            img.save(ruta, format="WEBP", quality=70)
+
+            cursor.execute("""
+                UPDATE productos SET imagen=%s WHERE id=%s
+            """, (nombre_imagen, id))
+
+            cambios.append("Imagen actualizada")
+
+        descripcion = f"Producto {anterior['codigo']}\n"
+
+        if cambios:
+            descripcion += "\n".join(cambios)
+        else:
+            descripcion += "Sin cambios relevantes"
+
+        cursor.execute("""
+            INSERT INTO historial (tipo_accion, usuario, detalles, fecha)
+            VALUES (%s, %s, %s, NOW())
+        """, ("Edición", "Admin", descripcion))
+
+        db.commit()
+
+        return redirect(url_for("admin_inventario"))
+
+    return render_template(
+        "editar_producto.html",
+        producto=producto,
+        marcas=marcas,
+        tipos=tipos,
+        posiciones=posiciones,
+        estados=estados,
+        almacenes=almacenes,
+        modelos=modelos
+    )
+
+@app.route('/eliminar_producto/<int:id>', methods=['POST'])
+def eliminar_producto(id):
+    db = get_db()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT 
+            p.codigo,
+            p.imagen,
+            m.nombre AS marca,
+            mo.nombre AS modelo,
+            t.nombre AS tipo
+        FROM productos p
+        JOIN marcas m ON p.id_marca = m.id
+        JOIN modelos mo ON p.id_modelo = mo.id
+        JOIN tipos t ON p.id_tipo = t.id
+        WHERE p.id = %s
+    """, (id,))
+
+    producto = cursor.fetchone()
+
+    if not producto:
+        return jsonify({"success": False, "error": "Producto no encontrado"})
+
+    # 2. BORRAR IMAGEN DEL SISTEMA
+    if producto["imagen"]:
+        ruta_imagen = os.path.join("static/uploads", producto["imagen"])
+
+        if os.path.exists(ruta_imagen):
+            os.remove(ruta_imagen)
+
+    descripcion = f"{producto['codigo']} - {producto['marca']} {producto['modelo']} - {producto['tipo']}"
+
+    cursor.execute("DELETE FROM productos WHERE id = %s", (id,))
+
+    cursor.execute("""
+        INSERT INTO historial (tipo_accion, usuario, detalles, fecha)
+        VALUES (%s, %s, %s, NOW())
+    """, ("Eliminado", "Admin", descripcion))
+
+    db.commit()
+    cursor.close()
+    db.close()
+
+    return jsonify({"success": True})
 
 if __name__ == '__main__':
     app.run(debug=True)

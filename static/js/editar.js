@@ -31,18 +31,17 @@ const tiposSoloLado = [7, 10];
 const tiposSoloPosicion = [9];
 const tiposNinguno = [1];
 
-tipoSelect.addEventListener('change', function () {
+function actualizarCamposTipo(limpiar = false) {
     const tipoId = parseInt(tipoSelect.value);
 
-    // Ocultar todo
     grupoPosicion.style.display = 'none';
     grupoLado.style.display = 'none';
 
-    // Limpiar valores
-    grupoPosicion.querySelector('select').value = "";
-    grupoLado.querySelectorAll('input').forEach(i => i.checked = false);
+    if (limpiar) {
+        grupoPosicion.querySelector('select').value = "";
+        grupoLado.querySelectorAll('input').forEach(i => i.checked = false);
+    }
 
-    // Quitar required
     grupoPosicion.querySelector('select').required = false;
     grupoLado.querySelectorAll('input').forEach(i => i.required = false);
 
@@ -55,12 +54,18 @@ tipoSelect.addEventListener('change', function () {
 
     } else if (tiposSoloLado.includes(tipoId)) {
         grupoLado.style.display = 'block';
-
         grupoLado.querySelectorAll('input').forEach(i => i.required = true);
 
     } else if (tiposSoloPosicion.includes(tipoId)) {
         grupoPosicion.style.display = 'block';
-
         grupoPosicion.querySelector('select').required = true;
     }
+}
+
+tipoSelect.addEventListener('change', function () {
+    actualizarCamposTipo(true);
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    actualizarCamposTipo(false);
 });
