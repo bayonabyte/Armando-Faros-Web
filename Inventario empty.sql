@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 24-03-2026 a las 05:11:05
+-- Tiempo de generación: 28-03-2026 a las 19:24:10
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -38,8 +38,8 @@ CREATE TABLE `almacenes` (
 --
 
 INSERT INTO `almacenes` (`id`, `nombre`, `capacidad_total`) VALUES
-(1, 'A', 100),
-(2, 'B', 100),
+(1, 'A', 1),
+(2, 'B', 6),
 (3, 'TIENDA', 100);
 
 -- --------------------------------------------------------
@@ -60,6 +60,20 @@ CREATE TABLE `estados` (
 INSERT INTO `estados` (`id`, `nombre`) VALUES
 (1, 'ORIGINAL'),
 (2, 'CHINO');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `historial`
+--
+
+CREATE TABLE `historial` (
+  `id` int(11) NOT NULL,
+  `tipo_accion` enum('Registro','Retiro','Edicion','Eliminado','Añadido') DEFAULT NULL,
+  `fecha` timestamp NOT NULL DEFAULT current_timestamp(),
+  `usuario` varchar(250) DEFAULT NULL,
+  `detalles` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -1336,24 +1350,9 @@ CREATE TABLE `productos` (
   `imagen` varchar(255) DEFAULT NULL,
   `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp(),
   `id_estado` int(11) DEFAULT NULL,
-  `id_almacen` int(11) DEFAULT NULL
+  `id_almacen` int(11) DEFAULT NULL,
+  `estado` varchar(20) DEFAULT 'activo'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `productos`
---
-
-INSERT INTO `productos` (`id`, `codigo`, `id_marca`, `id_modelo`, `anio_inicio`, `anio_fin`, `id_tipo`, `id_posicion`, `id_lado`, `precio_compra`, `precio_venta`, `stock`, `ubicacion`, `imagen`, `fecha_registro`, `id_estado`, `id_almacen`) VALUES
-(1, '20121518', 47, 888, 2011, 2014, 4, 2, 'RH', 113.99, 130.00, 1, 'ASD1', '20121518.jpg', '2026-03-23 04:10:04', 2, 2),
-(15, '123465', 4, 78, 2015, NULL, 2, 1, 'RH', 12.00, 14.00, 1, 'F2', '123465.jpeg', '2026-03-23 05:00:15', 2, 1),
-(16, '12456778', 7, 118, NULL, 2019, 9, 2, NULL, 12.00, 17.00, 5, 'P2G2', '12456778.jpeg', '2026-03-23 05:05:50', 1, 2),
-(17, '5678', 4, 63, NULL, 2026, 4, 2, 'RH', 15.00, 17.00, 1, 'H7', '5678.jpg', '2026-03-23 05:33:00', 1, 1),
-(18, '567853', 7, 123, 2015, 2026, 7, NULL, 'RH', 15.00, 20.00, 1, 'D2', '567853.jpg', '2026-03-23 22:06:24', 2, 2),
-(20, '6790', 9, 172, 2016, NULL, 7, NULL, 'RH', 15.00, 30.00, 1, 'H7', '6790.jpeg', '2026-03-23 22:07:24', 1, 2),
-(22, '78654', 4, 56, NULL, NULL, 6, 1, 'RH', 443.00, 7855.00, 1, 'HJG7', '78654.jpeg', '2026-03-23 22:08:54', 2, 1),
-(24, '74331', 4, 62, 2015, NULL, 3, 2, 'RH', 13.00, 69.00, 1, 'D2', '74331.jpeg', '2026-03-24 03:47:47', 2, 3),
-(25, '425763', 5, 102, NULL, 2018, 10, NULL, 'RH', 123.00, 54.00, 1, 'G3', '425763.jpeg', '2026-03-24 03:48:34', 1, 2),
-(26, '789654', 9, 173, 2015, 2018, 5, 2, 'RH', 12.00, 15.00, 1, '12D', '789654.jpeg', '2026-03-24 03:49:06', 2, 1);
 
 -- --------------------------------------------------------
 
@@ -1396,6 +1395,12 @@ ALTER TABLE `almacenes`
 -- Indices de la tabla `estados`
 --
 ALTER TABLE `estados`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `historial`
+--
+ALTER TABLE `historial`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -1455,16 +1460,22 @@ ALTER TABLE `estados`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT de la tabla `historial`
+--
+ALTER TABLE `historial`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `marcas`
 --
 ALTER TABLE `marcas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
 -- AUTO_INCREMENT de la tabla `modelos`
 --
 ALTER TABLE `modelos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1137;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1150;
 
 --
 -- AUTO_INCREMENT de la tabla `posiciones`
@@ -1476,7 +1487,7 @@ ALTER TABLE `posiciones`
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT de la tabla `tipos`
