@@ -45,6 +45,30 @@ h1{
     gap: 10px;
 }
 
+.btn-flotante {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background-color: #3498db;
+    color: white;
+    font-size: 28px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.btn-flotante:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
+}
+
 .btn-editar,
 .btn-eliminar {
     display: inline-flex;
@@ -123,7 +147,7 @@ table{
 }
 
 thead{
-    background:#2563eb;
+    background:#3498db;
     color:white;
 }
 

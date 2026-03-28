@@ -1,0 +1,124 @@
+/* Fondo */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f9;
+    padding: 40px 20px;
+}
+
+.back a {
+    text-decoration: none;
+    font-weight: bold;
+    color: #2d6cdf;
+}
+
+/* Título */
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Tabla */
+table {
+    width: 95%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Encabezado */
+thead {
+    background: #3498db;
+    color: white;
+}
+
+th {
+    padding: 12px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Celdas */
+td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    color: #555;
+}
+
+td:first-child,
+th:first-child,
+td:last-child,
+th:last-child {
+    text-align: center;
+}
+
+/* Filas alternas */
+tbody tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+/* Hover */
+tbody tr:hover {
+    background: #eef4ff;
+}
+
+/* Paginación */
+.paginacion {
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* Botones de paginación */
+.paginacion a {
+    text-decoration: none;
+    color: white;
+    background: #007bff;
+    padding: 8px 14px;
+    margin: 0 5px;
+    border-radius: 6px;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.paginacion a:hover {
+    background: #0056b3;
+}
+
+/* Texto página */
+.paginacion span {
+    margin: 0 10px;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Botón volver */
+a button {
+    display: block;
+    margin: 25px auto;
+    padding: 10px 20px;
+    border: none;
+    background: #6c757d;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* Hover volver */
+a button:hover {
+    background: #5a6268;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    table {
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+}

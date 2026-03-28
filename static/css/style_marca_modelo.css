@@ -1,0 +1,118 @@
+* {
+    box-sizing: border-box;
+}
+/* Fondo general */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f9;
+    padding: 40px 20px;
+}
+
+/* Título */
+h2 {
+    text-align: center;
+    margin: 20px 0;
+    color: #333;
+}
+
+/* Contenedor del formulario */
+form {
+    max-width: 450px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Labels */
+label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+}
+
+/* Inputs y selects */
+input,
+select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: 0.2s;
+}
+
+/* Focus */
+input:focus,
+select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0,123,255,0.3);
+}
+
+/* Botón */
+button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* Hover botón */
+button:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+
+/* Botón volver */
+.back a {
+    text-decoration: none;
+    font-weight: bold;
+    color: #2d6cdf;
+    padding: 12px;
+}
+
+.back a:hover {
+    text-decoration: underline;
+}
+
+/* Secciones dinámicas */
+#seccion_marca,
+#seccion_modelo {
+    margin-top: 10px;
+}
+
+/* Select principal arriba */
+.top-control {
+    max-width: 450px;
+    margin: 20px auto;
+}
+
+.top-control label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+}
+
+.top-control select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+    form {
+        padding: 15px;
+    }
+}

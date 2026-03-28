@@ -12,26 +12,9 @@
     <div class="back">
         <a href="{{ url_for('index') }}">← Volver al Inicio</a>
     </div>
-    <h1>Panel de Inventario</h1>
 
-    <!-- RESUMEN -->
-    <div class="dashboard">
-        <div>💰 Valor de inversión: S/ {{ patrimonio }}</div>
-        <div>📈 Valor de recuperación: S/ {{ ventas }}</div>
-    </div>
-
-    <!-- BOTONES -->
-    <div class="acciones">
-        <button onclick="window.location.href='/admin/marca-modelo'">
-            ➕ Añadir Marca / Modelo
-        </button>
-        <button>📄 Reportes</button>
-    </div>
-
-    <!-- TABLA PRODUCTOS -->
+    <h1>Editar o Eliminar producto</h1>
     <div class="buscar_container">
-
-        <h1>Buscar un producto</h1>
 
         <form method="get" class="form_buscar">
 
@@ -141,7 +124,7 @@
                         <button type="button"
                             class="btn-eliminar"
                             onclick="eliminarProducto({{ producto['id'] }}, '{{ producto['codigo'] }}')">
-                            ❌ Eliminar
+                            X Eliminar
                         </button>
                     </div>
 
@@ -189,6 +172,8 @@
 
     </div>
 
+    <br>
+
     <h1>Historial de cambios</h1>
     <div class="historial_container">
         {% if historial %}
@@ -228,6 +213,8 @@
     </div>
 
 <script src="{{ url_for('static', filename='js/administrar.js') }}"></script>
-
+<a href="/admin/marca-modelo" class="btn-flotante">
+    +
+</a>
 </body>
 </html>

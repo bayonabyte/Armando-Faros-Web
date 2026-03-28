@@ -13,13 +13,13 @@
     </div>
     <h2>➕ Añadir Marca / Modelo</h2>
 
-    <label>¿Qué deseas hacer?</label>
-    <select id="tipo" onchange="cambiarFormulario()">
-        <option value="modelo">Añadir modelo a marca existente</option>
-        <option value="marca_modelo">Añadir nueva marca y modelo</option>
-    </select>
-
-    <br><br>
+    <div class="top-control">
+        <label>¿Qué deseas hacer?</label>
+        <select id="tipo" onchange="cambiarFormulario()">
+            <option value="modelo">Añadir modelo a marca existente</option>
+            <option value="marca_modelo">Añadir nueva marca y modelo</option>
+        </select>
+    </div>
 
     <form method="POST" action="/admin/marca-modelo">
         <input type="hidden" name="tipo" id="tipo_hidden">
@@ -40,8 +40,6 @@
             <label>Código marca:</label>
             <input type="text" name="codigo_marca" placeholder="Ej: TOY">
         </div>
-
-        <br>
 
         <label>Modelo:</label>
         <input type="text" name="modelo" placeholder="Ej: COROLLA" required>

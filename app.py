@@ -131,8 +131,7 @@ def registrar():
 
             if imagen:
 
-                extension = os.path.splitext(imagen.filename)[1]
-                nombre_imagen = secure_filename(codigo + extension)
+                nombre_imagen = secure_filename(codigo + ".webp")
 
                 carpeta_uploads = os.path.join('static', 'uploads')
                 os.makedirs(carpeta_uploads, exist_ok=True)
@@ -150,6 +149,36 @@ def registrar():
                                 WHERE codigo = %s
                             """, (nombre_imagen, codigo))
                 db.commit()
+
+            # Obtener nombres reales
+            cursor.execute("SELECT nombre FROM marcas WHERE id=%s", (marca,))
+            nombre_marca = cursor.fetchone()["nombre"]
+
+            cursor.execute("SELECT nombre FROM modelos WHERE id=%s", (modelo,))
+            nombre_modelo = cursor.fetchone()["nombre"]
+
+            cursor.execute("SELECT nombre FROM tipos WHERE id=%s", (tipo,))
+            nombre_tipo = cursor.fetchone()["nombre"]
+
+            nombre_posicion = ""
+            if posicion:
+                cursor.execute("SELECT nombre FROM posiciones WHERE id=%s", (posicion,))
+                nombre_posicion = cursor.fetchone()["nombre"]
+
+            # Armar descripción bonita
+            descripcion = f"{codigo} - {nombre_marca} {nombre_modelo} - {nombre_tipo}"
+
+            if nombre_posicion:
+                descripcion += f" - {nombre_posicion}"
+
+            if lado:
+                descripcion += f" ({lado})"
+
+            cursor.execute("""
+                INSERT INTO historial (tipo_accion, usuario, detalles, fecha)
+                VALUES (%s, %s, %s, NOW())
+            """, ("Registro", "Admin", descripcion))
+            db.commit()
 
         except mysql.connector.IntegrityError:
             mensaje_error = "Ese producto ya existe en el inventario."
@@ -480,6 +509,17 @@ def retirar():
     cursor.execute("SELECT stock, imagen FROM productos WHERE codigo = %s", (codigo,))
     producto = cursor.fetchone()
 
+    cursor.execute("""
+        SELECT m.nombre AS marca, mo.nombre AS modelo
+        FROM productos p
+        LEFT JOIN marcas m ON p.id_marca = m.id
+        LEFT JOIN modelos mo ON p.id_modelo = mo.id
+        WHERE p.codigo = %s
+    """, (codigo,))
+
+    info = cursor.fetchone()
+    nombre_producto = f"{info['marca']} {info['modelo']}" if info else codigo
+
     if not producto:
         conexion.close()
         return jsonify({"success": False, "error": "Producto no encontrado"})
@@ -506,6 +546,19 @@ def retirar():
             ruta = os.path.join("static/uploads", producto["imagen"])
             if os.path.exists(ruta):
                 os.remove(ruta)
+
+
+    nombre_producto = f"{info['marca']} {info['modelo']}" if info else codigo
+
+    if nuevo_stock > 0:
+        descripcion = f"Retiro de {cantidad} unidad(es) de {nombre_producto} ({codigo}). Stock: {stock_actual} → {nuevo_stock}"
+    else:
+        descripcion = f"Producto {nombre_producto} ({codigo}) eliminado por retiro total de {cantidad} unidad(es)"
+
+    cursor.execute("""
+        INSERT INTO historial (tipo_accion, usuario, detalles, fecha)
+        VALUES (%s, %s, %s, NOW())
+    """, ("Retiro", "Admin", descripcion))
 
     conexion.commit()
     conexion.close()
@@ -644,10 +697,9 @@ def admin_inventario():
 
     # 📜 Historial
     cursor.execute("""
-        SELECT h.*, p.codigo, p.id_marca
-        FROM historial h
-        LEFT JOIN productos p ON h.producto_id = p.id
-        ORDER BY h.fecha DESC
+        SELECT tipo_accion, detalles, fecha
+        FROM historial
+        ORDER BY fecha DESC
         LIMIT 5
     """)
     historial = cursor.fetchall()
@@ -678,17 +730,32 @@ def ver_historial():
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
+    historial_por_pagina = 20
+    pagina = request.args.get("page", 1, type=int)
+
+    offset = (pagina - 1) * historial_por_pagina
+
+    cursor.execute("SELECT COUNT(*) AS total FROM historial")
+    total_historial = cursor.fetchone()["total"]
+
     cursor.execute("""
-        SELECT h.*, p.codigo, p.id_marca
-        FROM historial h
-        LEFT JOIN productos p ON h.producto_id = p.id
-        ORDER BY h.fecha DESC
-    """)
+        SELECT tipo_accion, detalles, fecha
+        FROM historial
+        ORDER BY fecha DESC
+        LIMIT %s OFFSET %s
+    """, (historial_por_pagina, offset))
+
     historial = cursor.fetchall()
+
+    total_paginas = max(1, math.ceil(total_historial / historial_por_pagina))
+
 
     conn.close()
 
-    return render_template("admin/historial.html", historial=historial)
+    return render_template("admin/historial.html",
+                           historial=historial,
+                           pagina=pagina,
+                           total_paginas=total_paginas)
 
 @app.route("/producto/<int:id>")
 def get_producto(id):
@@ -866,6 +933,23 @@ def editar_producto(id):
 
         cambios = []
 
+        if str(anterior["codigo"]) != str(codigo) and not (imagen and imagen.filename != ""):
+            imagen_actual = producto.get("imagen")
+            if imagen_actual:
+                ruta_actual = os.path.join("static", "uploads", imagen_actual)
+                if os.path.exists(ruta_actual):
+                    extension = os.path.splitext(imagen_actual)[1]
+                    nuevo_nombre = secure_filename(codigo + ".webp")
+                    nueva_ruta = os.path.join("static", "uploads", nuevo_nombre)
+
+                    os.rename(ruta_actual, nueva_ruta)
+
+                    cursor.execute("""
+                        UPDATE productos SET imagen=%s WHERE id=%s
+                    """, (nuevo_nombre, id))
+
+                    cambios.append("Imagen renombrada por cambio de código")
+
         if str(anterior["codigo"]) != str(codigo):
             cambios.append(f"Código {anterior['codigo']} → {codigo}")
 
@@ -891,8 +975,7 @@ def editar_producto(id):
             cambios.append("Almacén cambiado")
 
         if imagen and imagen.filename != "":
-            extension = os.path.splitext(imagen.filename)[1]
-            nombre_imagen = secure_filename(codigo + extension)
+            nombre_imagen = secure_filename(codigo + ".webp")
 
             ruta = os.path.join("static", "uploads", nombre_imagen)
 

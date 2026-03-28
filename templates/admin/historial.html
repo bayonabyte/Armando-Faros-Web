@@ -4,33 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial completo</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_administrar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_historial.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='img/logo_web.png') }}">
 </head>
 <body>
-<h2>Historial completo</h2>
+    <div class="back">
+       <a href="{{ url_for('admin_inventario') }}">← Volver</a>
+    </div>
 
-<table border="1">
-    <thead>
-        <tr>
-            <th>Tipo</th>
-            <th>Descripción</th>
-            <th>Fecha</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for h in historial %}
-        <tr>
-            <td>{{ h.tipo_accion }}</td>
-            <td>{{ h.detalles }}</td>
-            <td>{{ h.fecha }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <h1>Historial completo</h1>
 
-<a href="/administrar">
-    <button>⬅ Volver</button>
-</a>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for h in historial %}
+            <tr>
+                <td>{{ h.tipo_accion }}</td>
+                <td>{{ h.detalles }}</td>
+                <td>{{ h.fecha }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="paginacion">
+
+        {% if pagina > 1 %}
+            <a href="{{ url_for('ver_historial', page=pagina-1) }}">
+                « Anterior
+            </a>
+        {% endif %}
+
+        <span>Página {{ pagina }} de {{ total_paginas }}</span>
+
+        {% if pagina < total_paginas %}
+            <a href="{{ url_for('ver_historial', page=pagina+1) }}">
+                Siguiente »
+            </a>
+        {% endif %}
+
+    </div>
 </body>
 </html>
