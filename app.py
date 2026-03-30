@@ -1021,7 +1021,7 @@ def editar_producto(id):
                 buffer,
                 BUCKET,
                 f"productos/{nombre_imagen}",
-                ExtraArgs={'ContentType': 'image/webp'}
+                ExtraArgs={'ContentType': 'image/webp', 'ACL': 'public-read'}
             )
 
             url_imagen = f"{ENDPOINT}/{BUCKET}/productos/{nombre_imagen}"
