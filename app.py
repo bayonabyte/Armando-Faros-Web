@@ -6,12 +6,25 @@ import os
 from werkzeug.utils import secure_filename
 from PIL import Image
 from dotenv import load_dotenv
+import boto3
+import uuid
+from io import BytesIO
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'clave_segura'
 app.permanent_session_lifetime = timedelta(days=6)
+
+s3 = boto3.client(
+    's3',
+    endpoint_url=os.getenv("ENDPOINT"),
+    aws_access_key_id=os.getenv("KEY_ID"),
+    aws_secret_access_key=os.getenv("ACCESS_KEY"),
+)
+
+BUCKET = os.getenv("BUCKET_NAME")
+ENDPOINT = os.getenv("ENDPOINT")
 
 def get_db():
     return mysql.connector.connect(
@@ -135,24 +148,32 @@ def registrar():
             db.commit()
 
             if imagen:
-
-                nombre_imagen = secure_filename(codigo + ".webp")
-
-                carpeta_uploads = os.path.join('static', 'uploads')
-                os.makedirs(carpeta_uploads, exist_ok=True)
-
-                ruta_guardado = os.path.join(carpeta_uploads, nombre_imagen)
+                nombre_imagen = f"{codigo}_{uuid.uuid4()}.webp"
 
                 img = Image.open(imagen)
                 img = img.convert('RGB')
                 img.thumbnail((800, 800))
 
-                img.save(ruta_guardado, format="WEBP", quality=70, method=6)
+                buffer = BytesIO()
+                img.save(buffer, format="WEBP", quality=70, method=6)
+                buffer.seek(0)
+
+                # 🔥 Subir al bucket
+                s3.upload_fileobj(
+                    buffer,
+                    BUCKET,
+                    f"productos/{nombre_imagen}",
+                    ExtraArgs={'ContentType': 'image/webp'}
+                )
+
+                # 🔗 URL pública
+                url_imagen = f"{ENDPOINT}/{BUCKET}/productos/{nombre_imagen}"
 
                 cursor.execute("""
-                                UPDATE productos SET imagen = %s
-                                WHERE codigo = %s
-                            """, (nombre_imagen, codigo))
+                    UPDATE productos SET imagen = %s
+                    WHERE codigo = %s
+                """, (url_imagen, codigo))
+
                 db.commit()
 
             # Obtener nombres reales
@@ -554,9 +575,12 @@ def retirar():
         cursor.execute("DELETE FROM productos WHERE codigo = %s", (codigo,))
 
         if producto["imagen"]:
-            ruta = os.path.join("static/uploads", producto["imagen"])
-            if os.path.exists(ruta):
-                os.remove(ruta)
+            nombre = producto["imagen"].split("/")[-1]
+
+            s3.delete_object(
+                Bucket=BUCKET,
+                Key=f"productos/{nombre}"
+            )
 
 
     nombre_producto = f"{info['marca']} {info['modelo']}" if info else codigo
@@ -948,23 +972,6 @@ def editar_producto(id):
 
         cambios = []
 
-        if str(anterior["codigo"]) != str(codigo) and not (imagen and imagen.filename != ""):
-            imagen_actual = producto.get("imagen")
-            if imagen_actual:
-                ruta_actual = os.path.join("static", "uploads", imagen_actual)
-                if os.path.exists(ruta_actual):
-                    extension = os.path.splitext(imagen_actual)[1]
-                    nuevo_nombre = secure_filename(codigo + ".webp")
-                    nueva_ruta = os.path.join("static", "uploads", nuevo_nombre)
-
-                    os.rename(ruta_actual, nueva_ruta)
-
-                    cursor.execute("""
-                        UPDATE productos SET imagen=%s WHERE id=%s
-                    """, (nuevo_nombre, id))
-
-                    cambios.append("Imagen renombrada por cambio de código")
-
         if str(anterior["codigo"]) != str(codigo):
             cambios.append(f"Código {anterior['codigo']} → {codigo}")
 
@@ -990,26 +997,38 @@ def editar_producto(id):
             cambios.append("Almacén cambiado")
 
         if imagen and imagen.filename != "":
-            nombre_imagen = secure_filename(codigo + ".webp")
 
-            ruta = os.path.join("static", "uploads", nombre_imagen)
+            # 🔥 borrar imagen anterior del bucket
+            if producto["imagen"]:
+                nombre_anterior = producto["imagen"].split("/")[-1]
 
-            imagen_anterior = producto.get("imagen")
+                s3.delete_object(
+                    Bucket=BUCKET,
+                    Key=f"productos/{nombre_anterior}"
+                )
 
-            if imagen_anterior:
-                ruta_anterior = os.path.join("static", "uploads", imagen_anterior)
-
-                if os.path.exists(ruta_anterior):
-                    os.remove(ruta_anterior)
+            nombre_imagen = f"{codigo}_{uuid.uuid4()}.webp"
 
             img = Image.open(imagen)
             img = img.convert("RGB")
             img.thumbnail((800, 800))
-            img.save(ruta, format="WEBP", quality=70)
+
+            buffer = BytesIO()
+            img.save(buffer, format="WEBP", quality=70)
+            buffer.seek(0)
+
+            s3.upload_fileobj(
+                buffer,
+                BUCKET,
+                f"productos/{nombre_imagen}",
+                ExtraArgs={'ContentType': 'image/webp'}
+            )
+
+            url_imagen = f"{ENDPOINT}/{BUCKET}/productos/{nombre_imagen}"
 
             cursor.execute("""
                 UPDATE productos SET imagen=%s WHERE id=%s
-            """, (nombre_imagen, id))
+            """, (url_imagen, id))
 
             cambios.append("Imagen actualizada")
 
@@ -1066,10 +1085,12 @@ def eliminar_producto(id):
 
     # 2. BORRAR IMAGEN DEL SISTEMA
     if producto["imagen"]:
-        ruta_imagen = os.path.join("static/uploads", producto["imagen"])
+        nombre = producto["imagen"].split("/")[-1]
 
-        if os.path.exists(ruta_imagen):
-            os.remove(ruta_imagen)
+        s3.delete_object(
+            Bucket=BUCKET,
+            Key=f"productos/{nombre}"
+        )
 
     descripcion = f"{producto['codigo']} - {producto['marca']} {producto['modelo']} - {producto['tipo']}"
 
