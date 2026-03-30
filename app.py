@@ -59,6 +59,9 @@ def login():
 
 @app.route("/index")
 def index():
+    if "usuario" not in session:
+        return redirect(url_for('login'))
+
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
@@ -76,6 +79,8 @@ def index():
 
 @app.route('/registrar', methods=['GET', 'POST'])
 def registrar():
+    if "usuario" not in session:
+        return redirect(url_for('login'))
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
@@ -198,6 +203,8 @@ def registrar():
 
 @app.route('/buscar', methods=['GET'])
 def buscar():
+    if "usuario" not in session:
+        return redirect(url_for('login'))
 
     conexion = get_db()
     cursor = conexion.cursor(dictionary=True)
@@ -339,6 +346,8 @@ def buscar():
 
 @app.route("/almacen", methods=["GET"])
 def almacen():
+    if "usuario" not in session:
+        return redirect(url_for('login'))
     conexion = get_db()
     cursor = conexion.cursor(dictionary=True)
 
@@ -499,6 +508,8 @@ def almacen():
 
 @app.route("/retirar", methods=["POST"])
 def retirar():
+    if "usuario" not in session:
+        return redirect(url_for('login'))
     codigo = request.form["codigo"]
     cantidad = int(request.form["cantidad"])
 
@@ -567,6 +578,8 @@ def retirar():
 
 @app.route("/administrar", methods=["GET"])
 def admin_inventario():
+    if "usuario" not in session:
+        return redirect(url_for('login'))
     conexion = get_db()
     cursor = conexion.cursor(dictionary=True)
 
@@ -727,6 +740,8 @@ def admin_inventario():
 
 @app.route("/historial")
 def ver_historial():
+    if "usuario" not in session:
+        return redirect(url_for('login'))
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
