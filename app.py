@@ -163,7 +163,7 @@ def registrar():
                     buffer,
                     BUCKET,
                     f"productos/{nombre_imagen}",
-                    ExtraArgs={'ContentType': 'image/webp'}
+                    ExtraArgs={'ContentType': 'image/webp', 'ACL': 'public-read'}
                 )
 
                 # 🔗 URL pública
