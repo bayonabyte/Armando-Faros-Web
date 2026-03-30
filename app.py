@@ -1086,5 +1086,7 @@ def eliminar_producto(id):
 
     return jsonify({"success": True})
 
+#te amo katerine <3
+
 if __name__ == '__main__':
     app.run(debug=True)
