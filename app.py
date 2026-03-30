@@ -35,6 +35,19 @@ def get_db():
         database=os.getenv("DB_NAME")
     )
 
+def generar_url_imagen(nombre_imagen):
+    if not nombre_imagen:
+        return None
+
+    return s3.generate_presigned_url(
+        'get_object',
+        Params={
+            'Bucket': BUCKET,
+            'Key': f"productos/{nombre_imagen}"
+        },
+        ExpiresIn=3600  # 1 hora
+    )
+
 @app.route('/modelos')
 def modelos():
     marca_id = request.args.get('marca_id')
@@ -167,7 +180,7 @@ def registrar():
                 )
 
                 # 🔗 URL pública
-                url_imagen = f"{ENDPOINT}/productos/{nombre_imagen}"
+                url_imagen = nombre_imagen
 
                 cursor.execute("""
                     UPDATE productos SET imagen = %s
@@ -344,6 +357,9 @@ def buscar():
 
     cursor.execute(query, params)
     productos = cursor.fetchall()
+    for p in productos:
+        if p["imagen"]:
+            p["imagen"] = generar_url_imagen(p["imagen"])
 
     total_paginas = max(1, math.ceil(total_productos / productos_por_pagina))
 
