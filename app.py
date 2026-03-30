@@ -167,7 +167,7 @@ def registrar():
                 )
 
                 # 🔗 URL pública
-                url_imagen = f"{ENDPOINT}/{BUCKET}/productos/{nombre_imagen}"
+                url_imagen = f"{ENDPOINT}/productos/{nombre_imagen}"
 
                 cursor.execute("""
                     UPDATE productos SET imagen = %s
