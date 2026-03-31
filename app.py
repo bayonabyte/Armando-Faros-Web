@@ -3,7 +3,6 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for, s
 import mysql.connector
 from datetime import datetime, timedelta
 import os
-from werkzeug.utils import secure_filename
 from PIL import Image
 from dotenv import load_dotenv
 import boto3
@@ -1069,6 +1068,9 @@ def editar_producto(id):
         db.commit()
 
         return redirect(url_for("admin_inventario"))
+
+    if producto["imagen"]:
+        producto["imagen"] = generar_url_imagen(producto["imagen"])
 
     return render_template(
         "editar_producto.html",
