@@ -79,7 +79,7 @@
             {% for producto in productos %}
             <div class="card" data-id="{{ producto['id'] }}">
 
-                <img src="{{ url_for('static', filename='uploads/' + (producto['imagen'] or 'default.png')) }}">
+                <img src="{{ producto['imagen'] }}">
 
                 <div class="info">
 
