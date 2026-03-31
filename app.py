@@ -523,6 +523,9 @@ def almacen():
 
     cursor.execute(query, params)
     productos = cursor.fetchall()
+    for p in productos:
+        if p["imagen"]:
+            p["imagen"] = generar_url_imagen(p["imagen"])
 
     total_paginas = max(1, math.ceil(total_productos / productos_por_pagina))
 
@@ -736,6 +739,9 @@ def admin_inventario():
 
     cursor.execute(query, params)
     productos = cursor.fetchall()
+    for p in productos:
+        if p["imagen"]:
+            p["imagen"] = generar_url_imagen(p["imagen"])
 
     total_paginas = max(1, math.ceil(total_productos / productos_por_pagina))
 
@@ -1040,7 +1046,7 @@ def editar_producto(id):
                 ExtraArgs={'ContentType': 'image/webp', 'ACL': 'public-read'}
             )
 
-            url_imagen = f"{ENDPOINT}/{BUCKET}/productos/{nombre_imagen}"
+            url_imagen = nombre_imagen
 
             cursor.execute("""
                 UPDATE productos SET imagen=%s WHERE id=%s
