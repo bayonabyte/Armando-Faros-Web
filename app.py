@@ -1021,11 +1021,11 @@ def editar_producto(id):
 
             # 🔥 borrar imagen anterior del bucket
             if producto["imagen"]:
-                nombre_anterior = producto["imagen"].split("/")[-1]
+                imagen_anterior = producto["imagen"]
 
                 s3.delete_object(
                     Bucket=BUCKET,
-                    Key=f"productos/{nombre_anterior}"
+                    Key=f"productos/{imagen_anterior}"
                 )
 
             nombre_imagen = f"{codigo}_{uuid.uuid4()}.webp"
